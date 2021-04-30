@@ -4,6 +4,11 @@
 [Bb]uild/
 [Bb]uilds/
 [Ll]ogs/
+TextMesh Pro/
+.idea.*/
+Data/
+Lean/
+LeanTween/
 
 # Uncomment this line if you wish to ignore the asset store tools plugin
 # [Aa]ssets/AssetStoreTools*
@@ -31,6 +36,7 @@ ExportedObj/
 *.mdb
 *.opendb
 *.VC.db
+*.meta
 
 # Unity3D generated meta files
 *.pidb.meta

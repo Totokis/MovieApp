@@ -1,0 +1,37 @@
+{
+  "client": [
+    {
+      "services": {
+        "appinvite_service": {
+          "status": 1
+        }, 
+        "analytics_service": {
+          "status": 0
+        }
+      }, 
+      "oauth_client": [
+        {
+          "client_id": "51018602701-ihur66avsahimsjd00h8kunummpevbfq.apps.googleusercontent.com"
+        }
+      ], 
+      "api_key": [
+        {
+          "current_key": "AIzaSyDrGDNk2Q6w3t3Uwkuh7uU1LT6aiGuL1O4"
+        }
+      ], 
+      "client_info": {
+        "mobilesdk_app_id": "1:51018602701:ios:dc609b70f63a84da85b184", 
+        "android_client_info": {
+          "package_name": "com.pawel.MovieAppTest"
+        }
+      }
+    }
+  ], 
+  "configuration_version": "1", 
+  "project_info": {
+    "storage_bucket": "movieapp-3e4cc.appspot.com", 
+    "project_id": "movieapp-3e4cc", 
+    "firebase_url": "https://movieapp-3e4cc-default-rtdb.europe-west1.firebasedatabase.app", 
+    "project_number": "51018602701"
+  }
+}
