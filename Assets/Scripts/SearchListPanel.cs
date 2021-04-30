@@ -13,7 +13,7 @@ public class SearchListPanel : MonoBehaviour
     [SerializeField] TMP_InputField inputField;
     [SerializeField] SearchedItem listItemPrefab;
     [SerializeField] GameObject message;
-    
+
     public void SearchMovie()
     {
         DestroyChildren();
