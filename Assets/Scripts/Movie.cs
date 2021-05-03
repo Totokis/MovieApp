@@ -1,9 +1,16 @@
+using System.Runtime.InteropServices.ComTypes;
+
 class Movie
 {
-    private string title;
-    private string imageUrl;
-    private string description;
-    private bool seen;
+    string title;
+    string imageUrl;
+    string description;
+    bool seen;
+
+    public string Title => title;
+    public string ImageUrl => imageUrl;
+    public string Description => description;
+    public bool Seen => seen;
 
     public Movie()
     {
@@ -11,5 +18,12 @@ class Movie
         imageUrl = "";
         description = "No description";
         seen = false;
+    }
+    public Movie(string title, string imageUrl, string description, bool seen)
+    {
+        this.title = title;
+        this.imageUrl = imageUrl;
+        this.description = description;
+        this.seen = seen;
     }
 }
