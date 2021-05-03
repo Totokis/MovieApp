@@ -17,7 +17,7 @@ public class SearchListPanel : MonoBehaviour
     public void SearchMovie()
     {
         DestroyChildren();
-        GetListOfMovies();
+        SetItemsOnList();
     }
    
     void DestroyChildren()
@@ -29,7 +29,7 @@ public class SearchListPanel : MonoBehaviour
         message.SetActive(true);
     }
 
-    void GetListOfMovies()
+    void SetItemsOnList()
     {
         if (inputField.text != "")
         {
