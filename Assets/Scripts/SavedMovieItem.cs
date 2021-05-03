@@ -1,6 +1,4 @@
-using System;
 using System.Collections;
-using System.Collections.Generic;
 using TMPro;
 using UnityEngine;
 using UnityEngine.Networking;
@@ -15,6 +13,7 @@ public class SavedMovieItem : MonoBehaviour
     Movie _movie;
     Texture2D _texture;
     bool _imageIsNotSet;
+    bool _loaded;
 
     public void SetMovie(Movie movie)
     {
@@ -29,6 +28,7 @@ public class SavedMovieItem : MonoBehaviour
         { 
             _imageIsNotSet = true;
         }
+        _loaded = true;
     }
 
     void OnEnable()
@@ -60,5 +60,18 @@ public class SavedMovieItem : MonoBehaviour
     void SetImage()
     {
         image.sprite = Sprite.Create(_texture,new Rect(0f,0f,_texture.width,_texture.height),Vector2.zero,10f);
+        _loaded = true;
+    }
+
+    public void UpdateValues()
+    {
+        Debug.Log("UpdateValues");
+        FindObjectOfType<DatabaseManager>().UpdateOneMovie(
+            new Movie(
+            _movie.Title, 
+            _movie.ImageUrl, 
+            _movie.Description, 
+            seen.isOn
+        ),this);
     }
 }

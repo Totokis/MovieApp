@@ -20,6 +20,5 @@ class SavedMoviesManager: MonoBehaviour
         {
             Destroy(child.gameObject);
         }
-            
     }
 }

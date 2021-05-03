@@ -9,7 +9,6 @@ using UnityEngine.Serialization;
 public class DatabaseManager : MonoBehaviour
 {
     [SerializeField] SavedMoviesManager savedMoviesManager;
-    
     FirebaseAuth _auth;
     FirebaseUser _user;
     DatabaseReference _databaseReference;
@@ -24,31 +23,39 @@ public class DatabaseManager : MonoBehaviour
     void Start()
     {
         _movies = new List<Movie>();
-        _databaseReference.ChildAdded += HandleChildAdded;
-        _databaseReference.ValueChanged += HandleValueChanged;
+        // _databaseReference.ChildAdded += HandleChildAdded;
+        // _databaseReference.ValueChanged += HandleValueChanged;
         StartCoroutine(LoadUserData());
     }
 
-    void OnDestroy()
-    {
-        _databaseReference.ChildAdded -= HandleChildAdded;
-        _databaseReference.ValueChanged -= HandleValueChanged;
-    }
-    void HandleValueChanged(object sender, ValueChangedEventArgs e)
-    {
-        Debug.Log("HandleValueChanged");
-        StartCoroutine(LoadUserData());
-    }
-    void HandleChildAdded(object sender, ChildChangedEventArgs e)
-    {
-        Debug.Log("HandleChildAdded");
-        StartCoroutine(LoadUserData());
-    }
+    // void OnDestroy()
+    // {
+    //     _databaseReference.ChildAdded -= HandleChildAdded;
+    //     _databaseReference.ValueChanged -= HandleValueChanged;
+    // }
+    // void HandleValueChanged(object sender, ValueChangedEventArgs e)
+    // {
+    //     Debug.Log("HandleValueChanged");
+    //     StartCoroutine(LoadUserData());
+    // }
+    // void HandleChildAdded(object sender, ChildChangedEventArgs e)
+    // {
+    //     Debug.Log("HandleChildAdded");
+    //     StartCoroutine(LoadUserData());
+    // }
     
     public void SaveMovie(Movie movie)
     {
-        StartCoroutine(SaveUserData(movie));
+        StartCoroutine(SaveAndReloadDatabase(movie));
     }
+
+    IEnumerator SaveAndReloadDatabase(Movie movie)
+    {
+        yield return SaveUserData(movie);
+        yield return LoadUserData();
+    }
+    
+    
     
     IEnumerator SaveUserData(Movie movie)
     {
@@ -96,7 +103,7 @@ public class DatabaseManager : MonoBehaviour
         else if (DBCheckUserExists.Result.Value == null)
         {
             Debug.Log("There is no user data");
-            //savedMoviesManager.SetMovies(new List<Movie>());
+            savedMoviesManager.SetMovies(new List<Movie>());
         }
         else
         {
@@ -111,10 +118,33 @@ public class DatabaseManager : MonoBehaviour
                     tempSnapshot["description"].ToString(),
                     (bool)tempSnapshot["seen"]
                     ));
+                Debug.Log($"Movie {tempSnapshot["title"]} ");
             }
             Debug.Log("User is already in database !");
             savedMoviesManager.SetMovies(tempList);
         }
     }
-    
+
+    public void UpdateOneMovie(Movie movie, SavedMovieItem item)
+    {
+        StartCoroutine(SaveAndGetOneMovie(movie, item));
+    }
+    IEnumerator SaveAndGetOneMovie(Movie movie,SavedMovieItem item)
+    {
+        yield return SaveUserData(movie);
+        
+        var DBGetMovie = _databaseReference.Child("users").Child(_user.UserId).Child("movies").Child(movie.Title).GetValueAsync();
+        yield return new WaitUntil(predicate: () => DBGetMovie.IsCompleted);
+        if (DBGetMovie.Exception != null)
+        {
+            Debug.LogWarning(message:$"Failed to register task with exception: {DBGetMovie.Exception}");
+        }
+        else
+        {
+            DataSnapshot snapshot = DBGetMovie.Result;
+            Debug.Log(snapshot.Child("title"));
+            Debug.Log(snapshot.Child("seen"));
+        }
+        
+    }
 }
