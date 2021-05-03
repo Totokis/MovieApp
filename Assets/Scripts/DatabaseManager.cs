@@ -4,36 +4,56 @@ using System.Collections.Generic;
 using Firebase.Auth;
 using Firebase.Database;
 using UnityEngine;
+using UnityEngine.Serialization;
 
 public class DatabaseManager : MonoBehaviour
 {
+    [SerializeField] SavedMoviesManager savedMoviesManager;
+    
     FirebaseAuth _auth;
     FirebaseUser _user;
     DatabaseReference _databaseReference;
-    List<Movie> _movies = new List<Movie>();
-    SavedMoviesManager _savedMoviesManager;
-    
+    List<Movie> _movies;
+
     void Awake()
     {
         _auth = FirebaseAuth.DefaultInstance;
         _user = _auth.CurrentUser;
         _databaseReference = FirebaseDatabase.DefaultInstance.RootReference;
-        _movies = new List<Movie>();
     }
     void Start()
     {
+        _movies = new List<Movie>();
+        _databaseReference.ChildAdded += HandleChildAdded;
+        _databaseReference.ValueChanged += HandleValueChanged;
         StartCoroutine(LoadUserData());
     }
 
-    public void SaveMovie()
+    void OnDestroy()
     {
-        Movie movie = new Movie("Shrek", "google.com/shrek", "Kocham Julke", false);
+        _databaseReference.ChildAdded -= HandleChildAdded;
+        _databaseReference.ValueChanged -= HandleValueChanged;
+    }
+    private void HandleValueChanged(object sender, ValueChangedEventArgs e)
+    {
+        throw new NotImplementedException();
+    }
+    private void HandleChildAdded(object sender, ChildChangedEventArgs e)
+    {
+        throw new NotImplementedException();
+    }
+    
+    
+
+    public void SaveMovie(Movie movie)
+    {
+        //Movie movie = new Movie("Shrek", "google.com/shrek", "Kocham Julke", false);
         StartCoroutine(SaveUserData(movie));
     }
     
     IEnumerator SaveUserData(Movie movie)
     {
-        var DBTask = _databaseReference.Child("users").Child(_user.UserId).Child("movies").SetValueAsync(movie.Title);
+        //var DBTask = _databaseReference.Child("users").Child(_user.UserId).Child("movies").SetValueAsync(movie.Title);
         yield return SetTitle(movie.Title);
         yield return SetImageUrl(movie.Title,movie.ImageUrl);
         yield return SetDescription(movie.Title,movie.Description);
@@ -77,25 +97,24 @@ public class DatabaseManager : MonoBehaviour
         else if (DBCheckUserExists.Result.Value == null)
         {
             Debug.Log("There is no user data");
-            _movies.Clear();
-            _savedMoviesManager.SetMovies(_movies);
+            //savedMoviesManager.SetMovies(new List<Movie>());
         }
         else
         {
+            var tempList = new List<Movie>();
+            var movie = new Movie();
             DataSnapshot snapshot = DBCheckUserExists.Result;
-            _movies.Clear();
             foreach (DataSnapshot childSnapshot in snapshot.Children)
             {
-                var temp = new Movie(
-                    childSnapshot.Child("title").Value.ToString(),
-                    childSnapshot.Child("imageURL").Value.ToString(),
-                    childSnapshot.Child("description").Value.ToString(),
-                    Boolean.Parse(childSnapshot.Child("seen").Value.ToString())
-                    );
-                _movies.Add(temp);
+                var tempSnapshot = childSnapshot.Value as IDictionary;
+                tempList.Add(new Movie( tempSnapshot["title"].ToString(),
+                    tempSnapshot["imageUrl"].ToString(),
+                    tempSnapshot["description"].ToString(),
+                    (bool)tempSnapshot["seen"]
+                    ));
             }
             Debug.Log("User is already in database !");
-            _savedMoviesManager.SetMovies(_movies);
+            savedMoviesManager.SetMovies(tempList);
         }
     }
     

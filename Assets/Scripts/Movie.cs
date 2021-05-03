@@ -1,6 +1,6 @@
 using System.Runtime.InteropServices.ComTypes;
 
-class Movie
+public class Movie
 {
     string title;
     string imageUrl;
