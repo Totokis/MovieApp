@@ -1,3 +1,4 @@
+using System;
 using System.Collections;
 using System.Collections.Generic;
 using TMPro;
@@ -11,20 +12,33 @@ public class SavedMovieItem : MonoBehaviour
     [SerializeField] Image image;
     [SerializeField] Toggle seen;
     [SerializeField] Sprite deafultSprite;
-
     Movie _movie;
     Texture2D _texture;
-    
+    bool _imageIsNotSet;
 
     public void SetMovie(Movie movie)
     {
         _movie = movie;
-
         title.text = movie.Title;
         seen.isOn = movie.Seen;
-        StartCoroutine(GetImage());
+        if (gameObject.activeInHierarchy)
+        {
+            StartCoroutine(GetImage());
+        }
+        else
+        { 
+            _imageIsNotSet = true;
+        }
     }
-    
+
+    void OnEnable()
+    {
+        if (_imageIsNotSet)
+        {
+            StartCoroutine(GetImage());
+        }
+    }
+
     IEnumerator GetImage()
     {
         using (UnityWebRequest uwr = UnityWebRequestTexture.GetTexture(_movie.ImageUrl))

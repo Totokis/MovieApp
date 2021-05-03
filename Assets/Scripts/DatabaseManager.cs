@@ -34,20 +34,19 @@ public class DatabaseManager : MonoBehaviour
         _databaseReference.ChildAdded -= HandleChildAdded;
         _databaseReference.ValueChanged -= HandleValueChanged;
     }
-    private void HandleValueChanged(object sender, ValueChangedEventArgs e)
+    void HandleValueChanged(object sender, ValueChangedEventArgs e)
     {
-        throw new NotImplementedException();
+        Debug.Log("HandleValueChanged");
+        StartCoroutine(LoadUserData());
     }
-    private void HandleChildAdded(object sender, ChildChangedEventArgs e)
+    void HandleChildAdded(object sender, ChildChangedEventArgs e)
     {
-        throw new NotImplementedException();
+        Debug.Log("HandleChildAdded");
+        StartCoroutine(LoadUserData());
     }
     
-    
-
     public void SaveMovie(Movie movie)
     {
-        //Movie movie = new Movie("Shrek", "google.com/shrek", "Kocham Julke", false);
         StartCoroutine(SaveUserData(movie));
     }
     
