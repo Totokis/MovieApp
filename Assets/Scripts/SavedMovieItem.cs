@@ -1,3 +1,4 @@
+using System;
 using System.Collections;
 using TMPro;
 using UnityEngine;
@@ -14,7 +15,7 @@ public class SavedMovieItem : MonoBehaviour
     Texture2D _texture;
     bool _imageIsNotSet;
     bool _loaded;
-
+    
     public void SetMovie(Movie movie)
     {
         _movie = movie;
@@ -70,8 +71,20 @@ public class SavedMovieItem : MonoBehaviour
             new Movie(
             _movie.Title, 
             _movie.ImageUrl, 
-            _movie.Description, 
+            _movie.ReleaseDate, 
             seen.isOn
-        ),this);
+        ));
+    }
+
+    public void EditValues()
+    {
+        FindObjectOfType<GUIManager>().UpdateMoviePanel.gameObject.SetActive(true);
+        FindObjectOfType<GUIManager>().SavedMoviePanel.gameObject.SetActive(false);
+    }
+    
+
+    public void DeleteRecord()
+    {
+        FindObjectOfType<DatabaseManager>().DeleteOneMovie(_movie, this);
     }
 }
