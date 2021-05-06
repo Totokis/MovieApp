@@ -9,91 +9,25 @@ using UnityEngine.Serialization;
 public class DatabaseManager : MonoBehaviour
 {
     [SerializeField] SavedMoviesManager savedMoviesManager;
-    FirebaseAuth _auth;
-    FirebaseUser _user;
-    DatabaseReference _databaseReference;
-    List<Movie> _movies;
-
+    FirebaseAuth auth;
+    FirebaseUser user;
+    DatabaseReference databaseReference;
+    
     void Awake()
     {
-        _auth = FirebaseAuth.DefaultInstance;
-        _user = _auth.CurrentUser;
-        _databaseReference = FirebaseDatabase.DefaultInstance.RootReference;
+        auth = FirebaseAuth.DefaultInstance;
+        user = auth.CurrentUser;
+        databaseReference = FirebaseDatabase.DefaultInstance.RootReference;
     }
     void Start()
     {
-        _movies = new List<Movie>();
-        // _databaseReference.ChildAdded += HandleChildAdded;
-        // _databaseReference.ValueChanged += HandleValueChanged;
         StartCoroutine(LoadUserData());
     }
-
-    // void OnDestroy()
-    // {
-    //     _databaseReference.ChildAdded -= HandleChildAdded;
-    //     _databaseReference.ValueChanged -= HandleValueChanged;
-    // }
-    // void HandleValueChanged(object sender, ValueChangedEventArgs e)
-    // {
-    //     Debug.Log("HandleValueChanged");
-    //     StartCoroutine(LoadUserData());
-    // }
-    // void HandleChildAdded(object sender, ChildChangedEventArgs e)
-    // {
-    //     Debug.Log("HandleChildAdded");
-    //     StartCoroutine(LoadUserData());
-    // }
-    
-    public void SaveMovie(Movie movie)
-    {
-        StartCoroutine(SaveAndReloadDatabase(movie));
-    }
-
-    IEnumerator SaveAndReloadDatabase(Movie movie)
-    {
-        yield return SaveUserData(movie);
-        yield return LoadUserData();
-    }
     
     
-    
-    IEnumerator SaveUserData(Movie movie)
-    {
-        //var DBTask = _databaseReference.Child("users").Child(_user.UserId).Child("movies").SetValueAsync(movie.Title);
-        yield return SetTitle(movie.Title);
-        yield return SetImageUrl(movie.Title,movie.ImageUrl);
-        yield return SetDescription(movie.Title,movie.Description);
-        yield return SetSeen(movie.Title, movie.Seen);
-        Debug.Log("Saved data");
-    }
-    
-    IEnumerator SetTitle(string title)
-    {
-        var DBTask = _databaseReference.Child("users").Child(_user.UserId).Child("movies").Child(title).Child("title").SetValueAsync(title);
-        return new WaitUntil(predicate: () => DBTask.IsCompleted);
-    }
-    
-    IEnumerator SetImageUrl(string title, string imageUrl)
-    {
-        var DBTask = _databaseReference.Child("users").Child(_user.UserId).Child("movies").Child(title).Child("imageUrl").SetValueAsync(imageUrl);
-        return new WaitUntil(predicate: () => DBTask.IsCompleted);
-    }
-    
-    IEnumerator SetDescription(string title,string description)
-    {
-        var DBTask = _databaseReference.Child("users").Child(_user.UserId).Child("movies").Child(title).Child("description").SetValueAsync(description);
-        return new WaitUntil(predicate: () => DBTask.IsCompleted);
-    }
-    
-    IEnumerator SetSeen(string title, bool seen)
-    {
-        var DBTask = _databaseReference.Child("users").Child(_user.UserId).Child("movies").Child(title).Child("seen").SetValueAsync(seen);
-        return new WaitUntil(predicate: () => DBTask.IsCompleted);
-    }
-
     IEnumerator LoadUserData()
     {
-        var DBCheckUserExists = _databaseReference.Child("users").Child(_user.UserId).Child("movies").GetValueAsync();
+        var DBCheckUserExists = databaseReference.Child("users").Child(user.UserId).Child("movies").GetValueAsync();
         yield return new WaitUntil(predicate: () => DBCheckUserExists.IsCompleted);
 
         if (DBCheckUserExists.Exception != null)
@@ -108,7 +42,6 @@ public class DatabaseManager : MonoBehaviour
         else
         {
             var tempList = new List<Movie>();
-            var movie = new Movie();
             DataSnapshot snapshot = DBCheckUserExists.Result;
             foreach (DataSnapshot childSnapshot in snapshot.Children)
             {
@@ -124,27 +57,79 @@ public class DatabaseManager : MonoBehaviour
             savedMoviesManager.SetMovies(tempList);
         }
     }
-
-    public void UpdateOneMovie(Movie movie, SavedMovieItem item)
-    {
-        StartCoroutine(SaveAndGetOneMovie(movie, item));
-    }
-    IEnumerator SaveAndGetOneMovie(Movie movie,SavedMovieItem item)
+    
+    IEnumerator SaveOneMovie(Movie movie)
     {
         yield return SaveUserData(movie);
+    }
+    
+    IEnumerator SaveAndReloadDatabase(Movie movie)
+    {
+        yield return SaveUserData(movie);
+        yield return LoadUserData();
+    }
+    
+    IEnumerator SaveUserData(Movie movie)
+    {
+        yield return SetTitle(movie.Title);
+        yield return SetImageUrl(movie.Title,movie.ImageUrl);
+        yield return SetDescription(movie.Title,movie.ReleaseDate);
+        yield return SetSeen(movie.Title, movie.Seen);
+        Debug.Log("Saved data");
+    }
+    
+    IEnumerator SetTitle(string title)
+    {
+        var DBTask = databaseReference.Child("users").Child(user.UserId).Child("movies").Child(title).Child("title").SetValueAsync(title);
+        return new WaitUntil(predicate: () => DBTask.IsCompleted);
+    }
+    
+    IEnumerator SetImageUrl(string title, string imageUrl)
+    {
+        var DBTask = databaseReference.Child("users").Child(user.UserId).Child("movies").Child(title).Child("imageUrl").SetValueAsync(imageUrl);
+        return new WaitUntil(predicate: () => DBTask.IsCompleted);
+    }
+    
+    IEnumerator SetDescription(string title,string description)
+    {
+        var DBTask = databaseReference.Child("users").Child(user.UserId).Child("movies").Child(title).Child("description").SetValueAsync(description);
+        return new WaitUntil(predicate: () => DBTask.IsCompleted);
+    }
+    
+    IEnumerator SetSeen(string title, bool seen)
+    {
+        var DBTask = databaseReference.Child("users").Child(user.UserId).Child("movies").Child(title).Child("seen").SetValueAsync(seen);
+        return new WaitUntil(predicate: () => DBTask.IsCompleted);
+    }
+    
+    IEnumerator DeleteRecord(Movie movie, SavedMovieItem savedMovieItem)
+    {
+        var DBTask = databaseReference.Child("users").Child(user.UserId).Child("movies").Child(movie.Title).RemoveValueAsync();
+        yield return new WaitUntil(() => DBTask.IsCompleted);
         
-        var DBGetMovie = _databaseReference.Child("users").Child(_user.UserId).Child("movies").Child(movie.Title).GetValueAsync();
-        yield return new WaitUntil(predicate: () => DBGetMovie.IsCompleted);
-        if (DBGetMovie.Exception != null)
+        if (DBTask.Exception != null)
         {
-            Debug.LogWarning(message:$"Failed to register task with exception: {DBGetMovie.Exception}");
+            Debug.LogWarning(message:$"Failed to register task with exception: {DBTask.Exception}");
         }
         else
         {
-            DataSnapshot snapshot = DBGetMovie.Result;
-            Debug.Log(snapshot.Child("title"));
-            Debug.Log(snapshot.Child("seen"));
+            Debug.Log("Item deleted!");
+            Destroy(savedMovieItem.gameObject);
         }
-        
+    }
+    
+    public void SaveMovie(Movie movie)
+    {
+        StartCoroutine(SaveAndReloadDatabase(movie));
+    }
+    
+    public void UpdateOneMovie(Movie movie)
+    {
+        StartCoroutine(SaveOneMovie(movie));
+    }
+    
+    public void DeleteOneMovie(Movie movie, SavedMovieItem savedMovieItem)
+    {
+        StartCoroutine(DeleteRecord(movie, savedMovieItem));
     }
 }
