@@ -1,4 +1,3 @@
-using System;
 using System.Collections;
 using TMPro;
 using UnityEngine;
@@ -11,48 +10,49 @@ public class SavedMovieItem : MonoBehaviour
     [SerializeField] Image image;
     [SerializeField] Toggle seen;
     [SerializeField] Sprite deafultSprite;
-    Movie _movie;
-    Texture2D _texture;
-    bool _imageIsNotSet;
-    bool _loaded;
+    Movie movie;
+    Texture2D texture;
+    bool imageIsNotSet;
     
-    public void SetMovie(Movie movie)
+    void OnEnable()
     {
-        _movie = movie;
+        if (imageIsNotSet)
+        {
+            StartCoroutine(GetImage());
+        }
+    }
+    
+    void SetUI()
+    {
         title.text = movie.Title;
         seen.isOn = movie.Seen;
         if (gameObject.activeInHierarchy)
         {
+            Debug.Log("activeInHierarchy: true");
             StartCoroutine(GetImage());
         }
         else
-        { 
-            _imageIsNotSet = true;
-        }
-        _loaded = true;
-    }
-
-    void OnEnable()
-    {
-        if (_imageIsNotSet)
         {
-            StartCoroutine(GetImage());
+            Debug.Log("activeInHierarchy: false");
+            imageIsNotSet = true;
         }
     }
 
     IEnumerator GetImage()
     {
-        using (UnityWebRequest uwr = UnityWebRequestTexture.GetTexture(_movie.ImageUrl))
+        using (UnityWebRequest uwr = UnityWebRequestTexture.GetTexture(movie.ImageUrl))
         {
+            Debug.Log("Inside Get Image");
             yield return uwr.SendWebRequest();
             if (uwr.result != UnityWebRequest.Result.Success)
             {
-                _texture = deafultSprite.texture;
+                texture = deafultSprite.texture;
+                Debug.Log("Setted default texture");
             }
             else
             {
-                _texture = DownloadHandlerTexture.GetContent(uwr);
-                //spriteFromRequest = Sprite.Create(texture, new Rect(0f, 0f, texture.width, texture.height), Vector2.zero, 10f);
+                texture = DownloadHandlerTexture.GetContent(uwr); 
+                Debug.Log("Setted downloaded texture");
             }
         }
         SetImage();
@@ -60,31 +60,52 @@ public class SavedMovieItem : MonoBehaviour
     
     void SetImage()
     {
-        image.sprite = Sprite.Create(_texture,new Rect(0f,0f,_texture.width,_texture.height),Vector2.zero,10f);
-        _loaded = true;
+        image.sprite = Sprite.Create(texture,new Rect(0f,0f,texture.width,texture.height),Vector2.zero,10f);
+        movie.SetSprite(image.sprite);
     }
-
-    public void UpdateValues()
+    
+    void UpdateValues()
     {
         Debug.Log("UpdateValues");
-        FindObjectOfType<DatabaseManager>().UpdateOneMovie(
-            new Movie(
-            _movie.Title, 
-            _movie.ImageUrl, 
-            _movie.ReleaseDate, 
-            seen.isOn
-        ));
+        this.movie = new Movie(
+            movie.Title,
+            movie.ImageUrl,
+            movie.ReleaseDate,
+            seen.isOn,
+            movie.Description,
+            movie.Author,
+            movie.Note
+        );
+        FindObjectOfType<DatabaseManager>().UpdateOneMovie(this.movie);
     }
 
     public void EditValues()
     {
-        FindObjectOfType<GUIManager>().UpdateMoviePanel.gameObject.SetActive(true);
+        FindObjectOfType<GUIManager>().UpdateMoviePanel.LoadMovieToEdit(movie,this);
         FindObjectOfType<GUIManager>().SavedMoviePanel.gameObject.SetActive(false);
     }
     
-
     public void DeleteRecord()
     {
-        FindObjectOfType<DatabaseManager>().DeleteOneMovie(_movie, this);
+        FindObjectOfType<DatabaseManager>().DeleteOneMovie(movie, this);
     }
+    
+    public void SetMovie(Movie movie)
+    {
+        this.movie = movie;
+        SetUI();
+    }
+    
+    public void UpdateMovie(Movie movie)
+    {
+        this.movie = movie;
+        UpdateValues();
+        SetUI();
+    }
+
+    public void UpdateSeen()
+    {
+        UpdateValues();
+    }
+    
 }

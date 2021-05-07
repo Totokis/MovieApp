@@ -90,6 +90,7 @@ class SearchedItem : MonoBehaviour, ISelectHandler, IPointerEnterHandler, IPoint
             _clicked = 0;
             _clicktime = 0;
             Debug.Log("Double CLick: "+this.GetComponent<RectTransform>().name);
+            FindObjectOfType<GUIManager>().AddedPopUp.gameObject.SetActive(true);
             AddSelectedItem();
 
         }

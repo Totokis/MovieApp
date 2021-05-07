@@ -16,15 +16,35 @@ public class UpdateMoviePanel : MonoBehaviour
     [Header("Button")]
     [SerializeField] Button doneButton;
 
+    SavedMovieItem savedMovieItemReference;
+    Movie movieReference;
+
     public void EditDone()
     {
         gameObject.SetActive(false);
         FindObjectOfType<GUIManager>().SavedMoviePanel.gameObject.SetActive(true);
-    }
-
-    public void SetActive()
-    {
+        var editedMovie = new Movie(
+            titleInputField.text, 
+            movieReference.ImageUrl, 
+            releaseDateInputField.text, 
+            movieReference.Seen,
+            descriptionInputField.text, 
+            authorInputField.text, 
+            noteInputField.text);
+            savedMovieItemReference.UpdateMovie(editedMovie);
         
     }
-    
+
+    public void LoadMovieToEdit(Movie movie, SavedMovieItem savedMovieItem)
+    {
+        movieReference = movie;
+        savedMovieItemReference = savedMovieItem;
+        gameObject.SetActive(true);
+        image.sprite = movie.Sprite;
+        titleInputField.text = movie.Title;
+        releaseDateInputField.text = movie.ReleaseDate;
+        authorInputField.text = movie.Author;
+        descriptionInputField.text = movie.Description;
+        noteInputField.text = movie.Note;
+    }
 }

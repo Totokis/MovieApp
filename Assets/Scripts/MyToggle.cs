@@ -8,6 +8,6 @@ public class MyToggle: MonoBehaviour, IPointerClickHandler
     [SerializeField] SavedMovieItem savedMovieItem;
     public void OnPointerClick(PointerEventData eventData)
     {
-        savedMovieItem.UpdateValues();
+        savedMovieItem.UpdateSeen();
     }
 }

@@ -1,10 +1,9 @@
-using System;
 using System.Collections;
 using System.Collections.Generic;
 using Firebase.Auth;
 using Firebase.Database;
 using UnityEngine;
-using UnityEngine.Serialization;
+
 
 public class DatabaseManager : MonoBehaviour
 {
@@ -41,17 +40,31 @@ public class DatabaseManager : MonoBehaviour
         }
         else
         {
+            Debug.Log("Loading movies...");
             var tempList = new List<Movie>();
             DataSnapshot snapshot = DBCheckUserExists.Result;
             foreach (DataSnapshot childSnapshot in snapshot.Children)
             {
                 var tempSnapshot = childSnapshot.Value as IDictionary;
-                tempList.Add(new Movie( tempSnapshot["title"].ToString(),
-                    tempSnapshot["imageUrl"].ToString(),
-                    tempSnapshot["description"].ToString(),
-                    (bool)tempSnapshot["seen"]
+                if(tempSnapshot!=null)
+                {
+                    Debug.Log($"Title-Null?: {tempSnapshot["title"]==null}");
+                    Debug.Log($"ImageUrl-Null?: {tempSnapshot["imageUrl"]==null}");
+                    Debug.Log($"ReleaseDate-Null?: {tempSnapshot["releaseDate"]==null}");
+                    Debug.Log($"Seen-Null?: {tempSnapshot["seen"]==null}");
+                    
+                    tempList.Add(new Movie(
+                        tempSnapshot["title"].ToString(),
+                        tempSnapshot["imageUrl"].ToString(),
+                        tempSnapshot["releaseDate"].ToString(),
+                        (bool)tempSnapshot["seen"]
                     ));
-                Debug.Log($"Movie {tempSnapshot["title"]} ");
+                   
+                }
+                else
+                {
+                    Debug.Log($"Null TempSnapshot: {tempSnapshot}");
+                }
             }
             Debug.Log("User is already in database !");
             savedMoviesManager.SetMovies(tempList);
@@ -73,8 +86,11 @@ public class DatabaseManager : MonoBehaviour
     {
         yield return SetTitle(movie.Title);
         yield return SetImageUrl(movie.Title,movie.ImageUrl);
-        yield return SetDescription(movie.Title,movie.ReleaseDate);
+        yield return SetReleaseDate(movie.Title,movie.ReleaseDate);
         yield return SetSeen(movie.Title, movie.Seen);
+        yield return SetDescription(movie.Title, movie.Description);
+        yield return SetAuthor(movie.Title, movie.Author);
+        yield return SetNote(movie.Title, movie.Note);
         Debug.Log("Saved data");
     }
     
@@ -90,15 +106,31 @@ public class DatabaseManager : MonoBehaviour
         return new WaitUntil(predicate: () => DBTask.IsCompleted);
     }
     
-    IEnumerator SetDescription(string title,string description)
+    IEnumerator SetReleaseDate(string title,string releaseDate)
     {
-        var DBTask = databaseReference.Child("users").Child(user.UserId).Child("movies").Child(title).Child("description").SetValueAsync(description);
+        var DBTask = databaseReference.Child("users").Child(user.UserId).Child("movies").Child(title).Child("releaseDate").SetValueAsync(releaseDate);
         return new WaitUntil(predicate: () => DBTask.IsCompleted);
     }
     
     IEnumerator SetSeen(string title, bool seen)
     {
         var DBTask = databaseReference.Child("users").Child(user.UserId).Child("movies").Child(title).Child("seen").SetValueAsync(seen);
+        return new WaitUntil(predicate: () => DBTask.IsCompleted);
+    }
+    
+    IEnumerator SetDescription(string title, string description)
+    {
+        var DBTask = databaseReference.Child("users").Child(user.UserId).Child("movies").Child(title).Child("description").SetValueAsync(description);
+        return new WaitUntil(predicate: () => DBTask.IsCompleted);
+    }
+    IEnumerator SetAuthor(string title, string author)
+    {
+        var DBTask = databaseReference.Child("users").Child(user.UserId).Child("movies").Child(title).Child("author").SetValueAsync(author);
+        return new WaitUntil(predicate: () => DBTask.IsCompleted);
+    }
+    IEnumerator SetNote(string title, string note)
+    {
+        var DBTask = databaseReference.Child("users").Child(user.UserId).Child("movies").Child(title).Child("note").SetValueAsync(note);
         return new WaitUntil(predicate: () => DBTask.IsCompleted);
     }
     
