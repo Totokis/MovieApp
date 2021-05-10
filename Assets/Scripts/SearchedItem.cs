@@ -11,19 +11,12 @@ class SearchedItem : MonoBehaviour, ISelectHandler, IPointerEnterHandler, IPoint
     [SerializeField] TMP_Text releaseDate;
     [SerializeField] Image image;
     [SerializeField] Sprite deafulSprite;
-    [SerializeField] Shader shader;
 
     SearchedMovie _movie;
-    Material newMaterial;
     Texture2D _texture;
     float _clicked = 0;
     float _clicktime = 0;
     float _clickdelay = 0.5f;
-    
-    void Awake()
-    {
-        newMaterial = new Material(shader);
-    }
     
     IEnumerator GetImage()
     {
