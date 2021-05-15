@@ -1,7 +1,7 @@
 using System.Collections.Generic;
 using UnityEngine;
 
-class SavedMoviesManager: MonoBehaviour
+class SavedMoviesPanel: MonoBehaviour
 {
     [SerializeField] GameObject savedMovieItemPrefab;
     List<Movie> _moviesList;
