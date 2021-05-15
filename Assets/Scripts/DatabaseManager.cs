@@ -1,13 +1,15 @@
+using System;
 using System.Collections;
 using System.Collections.Generic;
 using Firebase.Auth;
 using Firebase.Database;
 using UnityEngine;
+using UnityEngine.Serialization;
 
 
 public class DatabaseManager : MonoBehaviour
 {
-    [SerializeField] SavedMoviesManager savedMoviesManager;
+    [FormerlySerializedAs("savedMoviesManager")] [SerializeField] SavedMoviesPanel savedMoviesPanel;
     FirebaseAuth auth;
     FirebaseUser user;
     DatabaseReference databaseReference;
@@ -36,7 +38,7 @@ public class DatabaseManager : MonoBehaviour
         else if (DBCheckUserExists.Result.Value == null)
         {
             Debug.Log("There is no user data");
-            savedMoviesManager.SetMovies(new List<Movie>());
+            savedMoviesPanel.SetMovies(new List<Movie>());
         }
         else
         {
@@ -56,9 +58,13 @@ public class DatabaseManager : MonoBehaviour
                     tempList.Add(new Movie(
                         tempSnapshot["title"].ToString(),
                         tempSnapshot["imageUrl"].ToString(),
+                        tempSnapshot["backdropUrl"].ToString(),
                         tempSnapshot["releaseDate"].ToString(),
-                        (bool)tempSnapshot["seen"]
-                    ));
+                        (bool)tempSnapshot["seen"],
+                        Double.Parse(tempSnapshot["voteAverage"].ToString()),
+                        int.Parse( tempSnapshot["votesCount"].ToString()),
+                        tempSnapshot["description"].ToString()
+                        ));
                    
                 }
                 else
@@ -67,7 +73,7 @@ public class DatabaseManager : MonoBehaviour
                 }
             }
             Debug.Log("User is already in database !");
-            savedMoviesManager.SetMovies(tempList);
+            savedMoviesPanel.SetMovies(tempList);
         }
     }
     
@@ -86,11 +92,14 @@ public class DatabaseManager : MonoBehaviour
     {
         yield return SetTitle(movie.Title);
         yield return SetImageUrl(movie.Title,movie.ImageUrl);
+        yield return SetBackdropUrl(movie.Title,movie.BackdropUrl);
         yield return SetReleaseDate(movie.Title,movie.ReleaseDate);
         yield return SetSeen(movie.Title, movie.Seen);
         yield return SetDescription(movie.Title, movie.Description);
         yield return SetAuthor(movie.Title, movie.Author);
         yield return SetNote(movie.Title, movie.Note);
+        yield return SetVoteAverage(movie.Title, movie.VoteAverage);
+        yield return SetVoteCount(movie.Title, movie.VotesCount);
         Debug.Log("Saved data");
     }
     
@@ -103,6 +112,12 @@ public class DatabaseManager : MonoBehaviour
     IEnumerator SetImageUrl(string title, string imageUrl)
     {
         var DBTask = databaseReference.Child("users").Child(user.UserId).Child("movies").Child(title).Child("imageUrl").SetValueAsync(imageUrl);
+        return new WaitUntil(predicate: () => DBTask.IsCompleted);
+    }
+    
+    IEnumerator SetBackdropUrl(string title, string imageUrl)
+    {
+        var DBTask = databaseReference.Child("users").Child(user.UserId).Child("movies").Child(title).Child("backdropUrl").SetValueAsync(imageUrl);
         return new WaitUntil(predicate: () => DBTask.IsCompleted);
     }
     
@@ -126,6 +141,16 @@ public class DatabaseManager : MonoBehaviour
     IEnumerator SetAuthor(string title, string author)
     {
         var DBTask = databaseReference.Child("users").Child(user.UserId).Child("movies").Child(title).Child("author").SetValueAsync(author);
+        return new WaitUntil(predicate: () => DBTask.IsCompleted);
+    }
+    IEnumerator SetVoteAverage(string title, double votesAverage)
+    {
+        var DBTask = databaseReference.Child("users").Child(user.UserId).Child("movies").Child(title).Child("voteAverage").SetValueAsync(votesAverage);
+        return new WaitUntil(predicate: () => DBTask.IsCompleted);
+    }
+    IEnumerator SetVoteCount(string title, int votesCount)
+    {
+        var DBTask = databaseReference.Child("users").Child(user.UserId).Child("movies").Child(title).Child("votesCount").SetValueAsync(votesCount);
         return new WaitUntil(predicate: () => DBTask.IsCompleted);
     }
     IEnumerator SetNote(string title, string note)

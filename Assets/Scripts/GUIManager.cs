@@ -8,51 +8,44 @@ using UnityEngine;
 public class GUIManager : MonoBehaviour
 {
    [SerializeField] UpdateMoviePanel updateMoviePanel;
+   [SerializeField] DetailMoviePanel detailMoviePanel;
    [SerializeField] GameObject savedMoviePanel;
    [SerializeField] AddedPopUp addedPopUp;
    [SerializeField] List<LeanButton> buttons;
-   [SerializeField] List<RectTransform> screens;
+   [SerializeField] List<GameObject> screens;
 
    public UpdateMoviePanel UpdateMoviePanel => updateMoviePanel;
+   
+   public DetailMoviePanel DetailMoviePanel => detailMoviePanel;
 
    public GameObject SavedMoviePanel => savedMoviePanel;
    
    public AddedPopUp AddedPopUp => addedPopUp;
 
-   private void Awake()
+   void Awake()
    {
-      buttons[0].OnClick.AddListener(()=>SignOutAction(screens[0]));
-      buttons[1].OnClick.AddListener(()=>SearchMovieAction(screens[1]));
-      buttons[2].OnClick.AddListener(()=>ShowMovieListAction(screens[2]));
-      buttons[3].OnClick.AddListener(()=>SettingsAction(screens[3]));
-   }
-   private void SettingsAction(RectTransform screen)
-   {
-      SwitchToScreen(screen);
-   }
-   private void ShowMovieListAction(RectTransform screen)
-   {
-      SwitchToScreen(screen);
-   }
-   private void SearchMovieAction(RectTransform screen)
-   {
-      SwitchToScreen(screen);
-   }
-   private void SignOutAction(RectTransform screen)
-   {
-      SwitchToScreen(screen);
-   }
-   private void SwitchToScreen(RectTransform screenToSwitch)
-   {
-      foreach (var screen in screens)
-      {
-         screen.gameObject.SetActive(false);
-      }
-      screenToSwitch.gameObject.SetActive(true);
+      AddListeners();
+      screens.Add(detailMoviePanel.gameObject);
+      screens.Add(updateMoviePanel.gameObject);
    }
    void Start()
    {
       SelectWelcomePage();
+   }
+   void AddListeners()
+   {
+      buttons[0].OnClick.AddListener(() => SwitchToScreen(screens[0]));
+      buttons[1].OnClick.AddListener(() => SwitchToScreen(screens[1]));
+      buttons[2].OnClick.AddListener(() => SwitchToScreen(screens[2]));
+      buttons[3].OnClick.AddListener(() => SwitchToScreen(screens[3]));
+   }
+   void SwitchToScreen(GameObject screenToSwitch)
+   {
+      foreach (var screen in screens)
+      {
+         screen.SetActive(false);
+      }
+      screenToSwitch.SetActive(true);
    }
    void SelectWelcomePage()
    {

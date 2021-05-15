@@ -1,4 +1,6 @@
+using System;
 using System.Collections;
+using Lean.Gui;
 using TMPro;
 using UnityEngine;
 using UnityEngine.Networking;
@@ -6,30 +8,62 @@ using UnityEngine.UI;
 
 public class SavedMovieItem : MonoBehaviour
 {
+    [Header("Text")]
     [SerializeField] TMP_Text title;
-    [SerializeField] Image image;
-    [SerializeField] Toggle seen;
+    [SerializeField] TMP_Text relaseDate;
+    [SerializeField] TMP_Text votes;
+    [Header("Controls")]
+    [SerializeField] Slider slider;
+    [SerializeField] Button seenButton;
+    [SerializeField] SeenButtonLogic seenButtonLogic;
+    [SerializeField] Button deleteButton;
+    [Header("Images")]
     [SerializeField] Sprite deafultSprite;
+    [SerializeField] Image image;
     Movie movie;
-    Texture2D texture;
     bool imageIsNotSet;
-    
-    void OnEnable()
+
+    public Movie Movie => movie;
+
+    void Awake()
     {
+        seenButtonLogic.stateChanged.AddListener(SwitchSeen);
+        deleteButton.onClick.AddListener(DeleteRecord);
+    }
+    
+    void SwitchSeen()
+    {
+        UpdateSeen();
+    }
+    async void OnEnable()
+    {
+        if (gameObject.activeInHierarchy)
+        {
+            SetButtonView();
+        }
         if (imageIsNotSet)
         {
-            StartCoroutine(GetImage());
+            TextureBase.Instance.AddToQueue(movie.ImageUrl,image);
         }
     }
     
-    void SetUI()
+    void SetButtonView()
+    {
+        Debug.Log($"***MovieSeen***: {movie.Seen}");
+        Debug.Log($"***Button logic***: {seenButtonLogic==null}");
+        seenButtonLogic.SetState(movie.Seen);
+        
+    }
+    
+   async void SetUI()
     {
         title.text = movie.Title;
-        seen.isOn = movie.Seen;
+        relaseDate.text = movie.ReleaseDate;
+        votes.text ="Votes: "+FormatNumber(movie.VotesCount);
+        slider.value = (float)(movie.VoteAverage / 10f);
         if (gameObject.activeInHierarchy)
         {
-            Debug.Log("activeInHierarchy: true");
-            StartCoroutine(GetImage());
+            TextureBase.Instance.AddToQueue(movie.ImageUrl,image);
         }
         else
         {
@@ -37,41 +71,18 @@ public class SavedMovieItem : MonoBehaviour
             imageIsNotSet = true;
         }
     }
-
-    IEnumerator GetImage()
-    {
-        using (UnityWebRequest uwr = UnityWebRequestTexture.GetTexture(movie.ImageUrl))
-        {
-            Debug.Log("Inside Get Image");
-            yield return uwr.SendWebRequest();
-            if (uwr.result != UnityWebRequest.Result.Success)
-            {
-                texture = deafultSprite.texture;
-                Debug.Log("Setted default texture");
-            }
-            else
-            {
-                texture = DownloadHandlerTexture.GetContent(uwr); 
-                Debug.Log("Setted downloaded texture");
-            }
-        }
-        SetImage();
-    }
-    
-    void SetImage()
-    {
-        image.sprite = Sprite.Create(texture,new Rect(0f,0f,texture.width,texture.height),Vector2.zero,10f);
-        movie.SetSprite(image.sprite);
-    }
-    
+   
     void UpdateValues()
     {
         Debug.Log("UpdateValues");
         this.movie = new Movie(
             movie.Title,
             movie.ImageUrl,
+            movie.BackdropUrl,
             movie.ReleaseDate,
-            seen.isOn,
+            seenButtonLogic.GetState(),
+            movie.VoteAverage,
+            movie.VotesCount,
             movie.Description,
             movie.Author,
             movie.Note
@@ -79,12 +90,6 @@ public class SavedMovieItem : MonoBehaviour
         FindObjectOfType<DatabaseManager>().UpdateOneMovie(this.movie);
     }
 
-    public void EditValues()
-    {
-        FindObjectOfType<GUIManager>().UpdateMoviePanel.LoadMovieToEdit(movie,this);
-        FindObjectOfType<GUIManager>().SavedMoviePanel.gameObject.SetActive(false);
-    }
-    
     public void DeleteRecord()
     {
         FindObjectOfType<DatabaseManager>().DeleteOneMovie(movie, this);
@@ -93,19 +98,61 @@ public class SavedMovieItem : MonoBehaviour
     public void SetMovie(Movie movie)
     {
         this.movie = movie;
+        Debug.Log($"DESCRIPTION: {movie.Description}");
         SetUI();
     }
     
     public void UpdateMovie(Movie movie)
     {
-        this.movie = movie;
-        UpdateValues();
-        SetUI();
+        if (movie.Title != this.movie.Title)
+        {
+            this.movie = movie;
+            UpdateValuesAndReload();
+            SetUI();
+        }
+        else
+        {
+            this.movie = movie;
+            UpdateValues();
+            SetUI();
+        }
+    }
+    void UpdateValuesAndReload()
+    {
+        Debug.Log("UpdateValues");
+        this.movie = new Movie(
+            movie.Title,
+            movie.ImageUrl,
+            movie.BackdropUrl,
+            movie.ReleaseDate,
+            seenButtonLogic.GetState(),
+            movie.VoteAverage,
+            movie.VotesCount,
+            movie.Description,
+            movie.Author,
+            movie.Note
+        );
+        FindObjectOfType<DatabaseManager>().SaveMovie(this.movie);
     }
 
     public void UpdateSeen()
     {
         UpdateValues();
+    }
+    
+    public void UpdateSeen(bool seen)
+    {
+        seenButtonLogic.SetState(seen);
+        UpdateValues();
+    }
+    
+    static string FormatNumber(int num) {
+        if (num >= 100000)
+            return FormatNumber(num / 1000) + "K";
+        if (num >= 10000) {
+            return (num / 1000D).ToString("0.#") + "K";
+        }
+        return num.ToString("#,0");
     }
     
 }

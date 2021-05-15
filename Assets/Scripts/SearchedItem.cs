@@ -1,100 +1,82 @@
 using System.Collections;
 using TMPro;
 using UnityEngine;
+using UnityEngine.Events;
 using UnityEngine.EventSystems;
 using UnityEngine.Networking;
 using UnityEngine.UI;
 
-class SearchedItem : MonoBehaviour, ISelectHandler, IPointerEnterHandler, IPointerExitHandler, IPointerClickHandler
+class SearchedItem : MonoBehaviour, IPointerClickHandler
 {
     [SerializeField] TMP_Text title;
     [SerializeField] TMP_Text releaseDate;
+    [SerializeField] TMP_Text votes;
     [SerializeField] Image image;
     [SerializeField] Sprite deafulSprite;
+    [SerializeField] Slider slider;
 
-    SearchedMovie _movie;
-    Texture2D _texture;
-    float _clicked = 0;
-    float _clicktime = 0;
-    float _clickdelay = 0.5f;
+    SearchedMovie movie;
+    Texture2D texture;
+    float clicked = 0;
+    float clicktime = 0;
+    float clickdelay = 0.5f;
     
-    IEnumerator GetImage()
+    public UnityEvent onDoubleClick;
+
+    void Awake()
     {
-        using (UnityWebRequest uwr = UnityWebRequestTexture.GetTexture(_movie.imageUrl))
-        {
-             yield return uwr.SendWebRequest();
-             if (uwr.result != UnityWebRequest.Result.Success)
-             {
-                 _texture = deafulSprite.texture;
-             }
-             else
-             {
-                 _texture = DownloadHandlerTexture.GetContent(uwr);
-                 //spriteFromRequest = Sprite.Create(texture, new Rect(0f, 0f, texture.width, texture.height), Vector2.zero, 10f);
-             }
-        }
-        SetImage();
+        onDoubleClick = new UnityEvent();
     }
     
-    void SetImage()
+    void AddSelectedItem()
     {
-        image.sprite = Sprite.Create(_texture,new Rect(0f,0f,_texture.width,_texture.height),Vector2.zero,10f);
+        FindObjectOfType<DatabaseManager>().SaveMovie(new Movie(movie.title,movie.imageUrl,movie.backdropImageUrl,movie.releaseDate,false,movie.voteAverage,movie.votesCount,movie.description));
     }
     
     public void SetMovie(SearchedMovie movie)
     {
-        _movie = movie;
-        title.text = _movie.title;
-        releaseDate.text = _movie.releaseDate;
-        StartCoroutine(GetImage());
+        this.movie = movie;
+        title.text = this.movie.title;
+        releaseDate.text = this.movie.releaseDate;
+        slider.value =  (float)(movie.voteAverage/10f);
+        votes.text = $"{FormatNumber(movie.votesCount)} reviews";
+        TextureBase.Instance.AddToQueue(movie.imageUrl,image);
     }
-    public void OnSelect(BaseEventData eventData)
-    {
-    }
-
-    public void OnClickEvent()
-    {
-        Debug.Log("Clicked");
-    }
-    public void OnPointerEnter(PointerEventData eventData)
-    {
-        // Debug.Log("OnPointerEnter");
-        //image.materialForRendering.SetFloat("_PixelateAmount",0f);
-    }
-    public void OnPointerExit(PointerEventData eventData)
-    {
-        // Debug.Log("OnPointerExit");
-        //image.materialForRendering.SetFloat("_PixelateAmount",0.8f);
-    }
+    
     public void OnPointerClick(PointerEventData eventData)
     {
         /*
          * Code from here:
          * https://forum.unity.com/threads/detect-double-click-on-something-what-is-the-best-way.476759/
          */
-        _clicked++;
-        if (_clicked == 1)
+        clicked++;
+        if (clicked == 1)
         {
-            _clicktime = Time.time;
+            clicktime = Time.time;
         }
         
-        if (_clicked > 1 && Time.time - _clicktime < _clickdelay)
+        if (clicked > 1 && Time.time - clicktime < clickdelay)
         {
-            _clicked = 0;
-            _clicktime = 0;
+            clicked = 0;
+            clicktime = 0;
             Debug.Log("Double CLick: "+this.GetComponent<RectTransform>().name);
-            FindObjectOfType<GUIManager>().AddedPopUp.gameObject.SetActive(true);
             AddSelectedItem();
+            onDoubleClick.Invoke();
 
         }
-        else if (_clicked > 2 || Time.time - _clicktime > 1)
+        else if (clicked > 2 || Time.time - clicktime > 1)
         {
             Debug.Log("One CLick: "+this.GetComponent<RectTransform>().name);
-            _clicked = 0;
+            clicked = 0;
         }
     }
-    void AddSelectedItem()
-    {
-        FindObjectOfType<DatabaseManager>().SaveMovie(new Movie(_movie.title,_movie.imageUrl,_movie.releaseDate,false));
+    
+    static string FormatNumber(int num) {
+        if (num >= 100000)
+            return FormatNumber(num / 1000) + "K";
+        if (num >= 10000) {
+            return (num / 1000D).ToString("0.#") + "K";
+        }
+        return num.ToString("#,0");
     }
 }
