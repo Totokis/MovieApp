@@ -10,7 +10,6 @@ public class GUIManager : MonoBehaviour
    [SerializeField] UpdateMoviePanel updateMoviePanel;
    [SerializeField] DetailMoviePanel detailMoviePanel;
    [SerializeField] GameObject savedMoviePanel;
-   [SerializeField] AddedPopUp addedPopUp;
    [SerializeField] List<LeanButton> buttons;
    [SerializeField] List<GameObject> screens;
 
@@ -20,7 +19,6 @@ public class GUIManager : MonoBehaviour
 
    public GameObject SavedMoviePanel => savedMoviePanel;
    
-   public AddedPopUp AddedPopUp => addedPopUp;
 
    void Awake()
    {
