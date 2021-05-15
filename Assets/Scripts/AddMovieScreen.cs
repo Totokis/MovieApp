@@ -9,7 +9,6 @@ public class AddMovieScreen : MonoBehaviour
    [Header("Images")]
    [SerializeField] ImageWithUrl image;
    [SerializeField] ImageWithUrl backdropImage;
-   [SerializeField] Sprite defaultSprite;
    [Header("Input fields")]
    [SerializeField] TMP_InputField titleInputField;
    [SerializeField] TMP_InputField releaseDateInputField;
@@ -18,12 +17,11 @@ public class AddMovieScreen : MonoBehaviour
    [SerializeField] TMP_InputField noteInputField;
    [Header("Other")]
    [SerializeField] Slider starBar;
-   [SerializeField] LeanButton seenButton;
    [SerializeField] SeenButtonLogic seenButtonLogic;
    [Header("Database")]
    [SerializeField] DatabaseManager databaseManager;
 
-   public ErrorNotification errorNotification = new ErrorNotification();
+   public readonly ErrorNotification errorNotification = new ErrorNotification();
    public void SaveMovie()
    {
       if (titleInputField.text == "")
@@ -45,10 +43,5 @@ public class AddMovieScreen : MonoBehaviour
             noteInputField.text);
          databaseManager.SaveMovie(movie);
       }
-   }
-
-   void OnDisable()
-   {
-      
    }
 }
