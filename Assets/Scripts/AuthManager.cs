@@ -1,3 +1,4 @@
+using System;
 using System.Collections;
 using UnityEngine;
 using Firebase;
@@ -77,6 +78,7 @@ public class AuthManager : MonoBehaviour
         else
         {
             User = LoginTask.Result;
+            //TODO Add listener for changing state
             Debug.LogFormat("User signed in successfully: {0} ({1})",User.DisplayName, User.Email);
             _message.text = "";
             _message.text = "Logged in";
@@ -85,7 +87,7 @@ public class AuthManager : MonoBehaviour
         }
        
     }
-    
+
 
     public void RegisterAndLogin()
     {
