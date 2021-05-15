@@ -6,9 +6,9 @@ using Firebase.Database;
 using UnityEngine;
 using UnityEngine.Serialization;
 
-
 public class DatabaseManager : MonoBehaviour
 {
+    public static DatabaseManager Instance { get; private set; }
     [FormerlySerializedAs("savedMoviesManager")] [SerializeField] SavedMoviesPanel savedMoviesPanel;
     FirebaseAuth auth;
     FirebaseUser user;
@@ -16,26 +16,40 @@ public class DatabaseManager : MonoBehaviour
     
     void Awake()
     {
-        auth = FirebaseAuth.DefaultInstance;
-        user = auth.CurrentUser;
-        databaseReference = FirebaseDatabase.DefaultInstance.RootReference;
+        if (Instance == null)
+        {
+            Instance = this;
+            DontDestroyOnLoad(gameObject);
+            InitializeFirebaseDatabase();
+        }
+        else
+        {
+            Destroy(gameObject);
+        }
     }
+    
     void Start()
     {
         StartCoroutine(LoadUserData());
     }
     
+    void InitializeFirebaseDatabase()
+    {
+        auth = FirebaseAuth.DefaultInstance;
+        user = auth.CurrentUser;
+        databaseReference = FirebaseDatabase.DefaultInstance.RootReference;
+    }
     
     IEnumerator LoadUserData()
     {
-        var DBCheckUserExists = databaseReference.Child("users").Child(user.UserId).Child("movies").GetValueAsync();
-        yield return new WaitUntil(predicate: () => DBCheckUserExists.IsCompleted);
+        var dbCheckDataExists = databaseReference.Child("users").Child(user.UserId).Child("movies").GetValueAsync();
+        yield return new WaitUntil(predicate: () => dbCheckDataExists.IsCompleted);
 
-        if (DBCheckUserExists.Exception != null)
+        if (dbCheckDataExists.Exception != null)
         {
-            Debug.LogWarning(message:$"Failed to register task with exception: {DBCheckUserExists.Exception}");
+            Debug.LogWarning(message:$"Failed to register task with exception: {dbCheckDataExists.Exception}");
         }
-        else if (DBCheckUserExists.Result.Value == null)
+        else if (dbCheckDataExists.Result.Value == null)
         {
             Debug.Log("There is no user data");
             savedMoviesPanel.SetMovies(new List<Movie>());
@@ -44,17 +58,12 @@ public class DatabaseManager : MonoBehaviour
         {
             Debug.Log("Loading movies...");
             var tempList = new List<Movie>();
-            DataSnapshot snapshot = DBCheckUserExists.Result;
+            DataSnapshot snapshot = dbCheckDataExists.Result;
             foreach (DataSnapshot childSnapshot in snapshot.Children)
             {
                 var tempSnapshot = childSnapshot.Value as IDictionary;
                 if(tempSnapshot!=null)
                 {
-                    Debug.Log($"Title-Null?: {tempSnapshot["title"]==null}");
-                    Debug.Log($"ImageUrl-Null?: {tempSnapshot["imageUrl"]==null}");
-                    Debug.Log($"ReleaseDate-Null?: {tempSnapshot["releaseDate"]==null}");
-                    Debug.Log($"Seen-Null?: {tempSnapshot["seen"]==null}");
-                    
                     tempList.Add(new Movie(
                         tempSnapshot["title"].ToString(),
                         tempSnapshot["imageUrl"].ToString(),
@@ -72,7 +81,6 @@ public class DatabaseManager : MonoBehaviour
                     Debug.Log($"Null TempSnapshot: {tempSnapshot}");
                 }
             }
-            Debug.Log("User is already in database !");
             savedMoviesPanel.SetMovies(tempList);
         }
     }
