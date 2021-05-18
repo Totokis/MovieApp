@@ -1,8 +1,10 @@
+using UnityEngine;
 using UnityEngine.Events;
 
 public class ErrorNotification
 {
-    private string message;
+    string message;
+    public UnityEvent MessageSet = new UnityEvent();
     public string Message
     {
         get => message;
@@ -12,6 +14,4 @@ public class ErrorNotification
             MessageSet.Invoke();
         }
     }
-    public UnityEvent MessageSet = new UnityEvent();
-
 }

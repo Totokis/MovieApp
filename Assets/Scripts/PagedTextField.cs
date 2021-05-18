@@ -3,18 +3,18 @@ using UnityEngine;
 using UnityEngine.EventSystems;
 
 public class PagedTextField : MonoBehaviour, IPointerClickHandler
-{ 
-    TMP_Text text;
-    int numberOfPages;
-    int pageIndex;
+{
+    private int numberOfPages;
+    private int pageIndex;
+    private TMP_Text text;
 
-    void Awake()
+    private void Awake()
     {
         text = GetComponent<TMP_Text>();
         pageIndex = 1;
     }
-    
-    void OnGUI()
+
+    private void OnGUI()
     {
         numberOfPages = text.textInfo.pageCount;
     }

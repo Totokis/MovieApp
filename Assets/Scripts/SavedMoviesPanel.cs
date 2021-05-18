@@ -1,24 +1,25 @@
+using System;
 using System.Collections.Generic;
 using UnityEngine;
 
-class SavedMoviesPanel: MonoBehaviour
+internal class SavedMoviesPanel : MonoBehaviour
 {
-    [SerializeField] GameObject savedMovieItemPrefab;
-    List<Movie> _moviesList;
+    [SerializeField] private GameObject savedMovieItemPrefab;
+    private List<Movie> _moviesList;
+
+    
     public void SetMovies(List<Movie> movies)
-    { 
+    {
         DestroyChildren();
         foreach (var movie in movies)
         {
-            var listElement = Instantiate(savedMovieItemPrefab,transform);
+            var listElement = Instantiate(savedMovieItemPrefab, transform);
             listElement.GetComponent<SavedMovieItem>().SetMovie(movie);
         }
     }
-    void DestroyChildren()
+    private void DestroyChildren()
     {
         foreach (Transform child in transform)
-        {
             Destroy(child.gameObject);
-        }
     }
 }

@@ -1,4 +1,4 @@
-struct SearchedMovie
+internal struct SearchedMovie
 {
     public string title;
     public string imageUrl;
@@ -7,5 +7,5 @@ struct SearchedMovie
     public string releaseDate;
     public double voteAverage;
     public int votesCount;
-    
+
 }

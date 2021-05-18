@@ -1,7 +1,4 @@
 using System;
-using System.Collections;
-using System.Collections.Generic;
-using Firebase;
 using Firebase.Auth;
 using UnityEngine;
 using UnityEngine.SceneManagement;
@@ -21,13 +18,11 @@ public class StateManager : MonoBehaviour
     }
     private void HandleAuthStateChanged(object sender, EventArgs e)
     {
-       CheckUser(); 
+        CheckUser();
     }
     private void CheckUser()
     {
         if (FirebaseAuth.DefaultInstance.CurrentUser != null)
-        {
             SceneManager.LoadScene(SceneManager.GetActiveScene().buildIndex + 1);
-        }
     }
 }

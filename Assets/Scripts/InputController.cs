@@ -5,27 +5,25 @@ using UnityEngine.UI;
 
 public class InputController : MonoBehaviour
 {
-    [SerializeField] Selectable firstInput;
-    [SerializeField] Button submitButton;
+    [SerializeField] private Selectable firstInput;
+    [SerializeField] private Button submitButton;
 
-    EventSystem _system;
-    TouchScreenKeyboard mobileKeyboard;
-    
-    
-    void Awake()
+    private EventSystem _system;
+    private TouchScreenKeyboard mobileKeyboard;
+
+
+    private void Awake()
     {
         _system = EventSystem.current;
         if (firstInput == null)
-        {
             firstInput = GetComponentInChildren<Selectable>();
-        }
         firstInput.Select();
-        mobileKeyboard = TouchScreenKeyboard.Open("",TouchScreenKeyboardType.EmailAddress);
+        mobileKeyboard = TouchScreenKeyboard.Open("", TouchScreenKeyboardType.EmailAddress);
     }
-    
-    void Update()
+
+    private void Update()
     {
-        if (Input.GetKey(KeyCode.LeftShift)&&Input.GetKeyDown(KeyCode.Tab))
+        if (Input.GetKey(KeyCode.LeftShift) && Input.GetKeyDown(KeyCode.Tab))
         {
             CheckCurrentInput();
             SelectUpperInput();
@@ -35,12 +33,12 @@ public class InputController : MonoBehaviour
             CheckCurrentInput();
             SelectDownInput();
         }
-        else if (Input.GetKeyDown(KeyCode.Return)||mobileKeyboard.status == TouchScreenKeyboard.Status.Done)
+        else if (Input.GetKeyDown(KeyCode.Return) || mobileKeyboard.status == TouchScreenKeyboard.Status.Done)
         {
             var currentButton = _system.currentSelectedGameObject.GetComponent<Button>();
             if (currentButton == submitButton)
             {
-               //submitButton.onClick.Invoke();
+                //submitButton.onClick.Invoke();
             }
             else
             {
@@ -48,38 +46,30 @@ public class InputController : MonoBehaviour
                 SelectDownInput();
             }
         }
-    } 
-    void SelectDownInput()
+    }
+    private void SelectDownInput()
     {
 
-        Selectable next = _system.currentSelectedGameObject.GetComponent<Selectable>().FindSelectableOnDown();
+        var next = _system.currentSelectedGameObject.GetComponent<Selectable>().FindSelectableOnDown();
         if (next != null)
-        {
             next.Select();
-        }
     }
-    void SelectUpperInput()
+    private void SelectUpperInput()
     {
-        Selectable previous = _system.currentSelectedGameObject.GetComponent<Selectable>().FindSelectableOnUp();
+        var previous = _system.currentSelectedGameObject.GetComponent<Selectable>().FindSelectableOnUp();
         if (previous != null)
-        {
             previous.Select();
-        }
     }
-    void CheckCurrentInput()
+    private void CheckCurrentInput()
     {
 
         if (_system.currentSelectedGameObject == null)
-        {
             firstInput.Select();
-        }
-        
+
     }
     public void ClearInput()
     {
         foreach (var inputField in GetComponentsInChildren<TMP_InputField>())
-        {
             inputField.text = "";
-        }
     }
 }

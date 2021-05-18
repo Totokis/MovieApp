@@ -6,38 +6,33 @@ using UnityEngine.UI;
 
 public class ImageWithUrl : MonoBehaviour, IPointerClickHandler
 {
-    [SerializeField] Image image = null;
+    [SerializeField] Image image;
     [SerializeField] TMP_InputField input;
     [SerializeField] bool editable = true;
+    bool selected;
     string url = "";
-    bool selected = false;
 
     void Awake()
     {
         input.gameObject.SetActive(false);
-        input.onSubmit.AddListener(inputText => SetUrl(inputText,this));
+        input.onSubmit.AddListener(inputText => SetUrl(inputText, this));
         if (image == null)
-        {
             image = GetComponent<Image>();
-        }
-        if(image==null)
-        {
+        if (image == null)
             throw new Exception("There is no image component");
-        }
     }
+
 
     void UrlChanged()
     {
-        Debug.Log($"DEBUG Url changed inside: {gameObject.name}");
         LoadImage();
     }
-    
+
     void LoadImage()
     {
-        Debug.Log($"DEBUG Loading image by: {gameObject.name}");
         try
         {
-            TextureBase.Instance.AddToQueue(url,image);
+            TextureBase.Instance.AddToQueue(url, image);
         }
         catch (Exception e)
         {
@@ -49,7 +44,6 @@ public class ImageWithUrl : MonoBehaviour, IPointerClickHandler
     {
         if (caller.selected)
         {
-            Debug.Log($"DEBUG Setting Url with argument: {arg0} on: {gameObject.name} \n");
             if (!url.Equals(arg0))
             {
                 url = arg0;
@@ -59,16 +53,19 @@ public class ImageWithUrl : MonoBehaviour, IPointerClickHandler
             selected = false;
         }
     }
-    
-    public string GetUrl() => url ??= "";
-
     public void OnPointerClick(PointerEventData eventData)
     {
-        if(editable){
+        if (editable)
+        {
             selected = true;
             input.gameObject.SetActive(true);
             input.text = url;
-            
+
         }
+    }
+
+    public string GetUrl()
+    {
+        return url ??= "";
     }
 }

@@ -1,55 +1,56 @@
-using System;
 using Lean.Gui;
 using UnityEngine;
-using UnityEngine.UI;
 
 public class DetailMoviePanelUI : MonoBehaviour
 {
-    [SerializeField] LeanButton returnButton;
-    [SerializeField] LeanButton seenButton;
-    [SerializeField] LeanButton deleteButton;
-    [SerializeField] LeanButton updateButton;
-    DetailMoviePanel detailMoviePanel;
-    GUIManager guiManager; 
-    SeenButtonLogic seenButtonLogic;
+    [SerializeField] private LeanButton returnButton;
+    [SerializeField] private LeanButton seenButton;
+    [SerializeField] private LeanButton deleteButton;
+    [SerializeField] private LeanButton updateButton;
+    private DetailMoviePanel detailMoviePanel;
+    private GUIManager guiManager;
+    private SeenButtonLogic seenButtonLogic;
 
-    void Awake()
+    private void Awake()
     {
         seenButtonLogic = seenButton.GetComponent<SeenButtonLogic>();
         guiManager = FindObjectOfType<GUIManager>();
         detailMoviePanel = GetComponent<DetailMoviePanel>();
-        returnButton.OnClick.AddListener((ReturnToList));
+        returnButton.OnClick.AddListener(ReturnToList);
         seenButtonLogic.stateChanged.AddListener(UpdateState);
         deleteButton.OnClick.AddListener(DeleteMovie);
         updateButton.OnClick.AddListener(UpdateMovie);
     }
 
-    void OnEnable()
+    private void OnEnable()
     {
-       SetButtonView();
+        transform.localScale = new Vector3(0, 0, 0);
+        LeanTween.scale(gameObject, new Vector3(1, 1, 1), 0.3f);
+        SetButtonView();
     }
-    void SetButtonView()
+    
+    private void SetButtonView()
     {
         seenButtonLogic.SetState(detailMoviePanel.SavedMovieItem.Movie.Seen);
     }
-    void UpdateMovie()
+    private void UpdateMovie()
     {
         var updateMoviePanel = guiManager.UpdateMoviePanel;
         var savedMovieItem = detailMoviePanel.SavedMovieItem;
         updateMoviePanel.UpdateMovie(savedMovieItem);
     }
-    void DeleteMovie()
+    private void DeleteMovie()
     {
         detailMoviePanel.SavedMovieItem.DeleteRecord();
         gameObject.SetActive(false);
     }
-    void UpdateState()
+    private void UpdateState()
     {
         detailMoviePanel.SavedMovieItem.UpdateSeen(seenButtonLogic.GetState());
     }
 
-    void ReturnToList()
+    private void ReturnToList()
     {
-        gameObject.SetActive(false);
+        LeanTween.scale(gameObject, new Vector3(0, 0, 0), 0.3f).setOnComplete(() => gameObject.SetActive(false));
     }
 }

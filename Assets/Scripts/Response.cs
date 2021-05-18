@@ -1,9 +1,8 @@
-using System.Collections;
+using System;
 using System.Collections.Generic;
-using UnityEngine;
 
 // Root myDeserializedClass = JsonConvert.DeserializeObject<Root>(myJsonResponse); 
-[System.Serializable]
+[Serializable]
 public class Result
 {
     public bool adult;
@@ -19,7 +18,7 @@ public class Result
     public string title;
     public bool video;
     public double vote_average;
-    public int vote_count; 
+    public int vote_count;
 }
 
 public class Root
@@ -29,6 +28,3 @@ public class Root
     public int total_pages;
     public int total_results;
 }
-
-
-

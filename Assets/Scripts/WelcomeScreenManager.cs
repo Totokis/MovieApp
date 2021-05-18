@@ -1,12 +1,9 @@
-using System;
-using System.Collections;
-using System.Collections.Generic;
 using UnityEngine;
 
 public class WelcomeScreenManager : MonoBehaviour
 {
-    [SerializeField] InputController loginPage;
-    [SerializeField] InputController registerPage;
+    [SerializeField] private InputController loginPage;
+    [SerializeField] private InputController registerPage;
 
     private void Awake()
     {
@@ -18,7 +15,7 @@ public class WelcomeScreenManager : MonoBehaviour
     {
         registerPage.ClearInput();
     }
-    
+
     public void ClearLoginPage()
     {
         loginPage.ClearInput();

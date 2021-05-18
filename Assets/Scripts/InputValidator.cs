@@ -1,37 +1,29 @@
-using System;
-using System.Runtime.CompilerServices;
 using TMPro;
 using UnityEngine;
 
-class InputValidator: MonoBehaviour
+internal class InputValidator : MonoBehaviour
 {
-    enum InputType
-    {
-        Password,
-        ConfirmPassword,
-        Email
-    }
-    
-    [SerializeField] InputType myInput;
-    [SerializeField] TMP_Text label;
-    [SerializeField] TMP_InputField password;
-    
-    TMP_InputField inputField;
-    string failureMessage;
-    string defaultLabel;
-    string _value;
-    public string Value => _value;
+
+    [SerializeField] private InputType myInput;
+    [SerializeField] private TMP_Text label;
+    [SerializeField] private TMP_InputField password;
+    private string defaultLabel;
+    private string failureMessage;
+
+    private TMP_InputField inputField;
+
+    public string Value { get; private set; }
 
     public bool IsValid => CheckValidty();
-    
-    void Awake()
+
+    private void Awake()
     {
         defaultLabel = label.text;
         failureMessage = "";
         inputField = GetComponent<TMP_InputField>();
     }
-    
-    void Update()
+
+    private void Update()
     {
         if (failureMessage != "")
         {
@@ -41,22 +33,22 @@ class InputValidator: MonoBehaviour
         else
         {
             label.text = defaultLabel;
-            label.color = Color.black;
+            label.color = Color.white;
         }
     }
-    bool CheckEmailValidity()
+    private bool CheckEmailValidity()
     {
         if (inputField.text.Length >= 6)
         {
-            _value = inputField.text;
+            Value = inputField.text;
             failureMessage = "";
             return true;
         }
-        failureMessage = "Short Password";
+        failureMessage = "Email invalid";
         return false;
     }
 
-    bool CheckPasswordMatch()
+    private bool CheckPasswordMatch()
     {
         if (password.text == inputField.text)
         {
@@ -66,36 +58,42 @@ class InputValidator: MonoBehaviour
         failureMessage = "Passwords dont match";
         return false;
     }
-    
-    bool CheckPasswordValidity()
+
+    private bool CheckPasswordValidity()
     {
-      
-            if (inputField.text.Length >= 6)
-            {
-                _value = inputField.text;
-                failureMessage = "";
-                return true;
-            }
-            failureMessage = "Short Password";
-            return false;
-        
+
+        if (inputField.text.Length >= 6)
+        {
+            Value = inputField.text;
+            failureMessage = "";
+            return true;
+        }
+        failureMessage = "Short Password";
+        return false;
+
     }
-    bool CheckValidty()
+    private bool CheckValidty()
     {
-        bool isValid = true;
+        var isValid = true;
         switch (myInput)
         {
             case InputType.ConfirmPassword:
                 isValid = CheckPasswordMatch();
                 break;
             case InputType.Email:
-                isValid= CheckEmailValidity();
+                isValid = CheckEmailValidity();
                 break;
             case InputType.Password:
-                isValid= CheckPasswordValidity();
+                isValid = CheckPasswordValidity();
                 break;
         }
         return isValid;
-    } 
-    
+    }
+
+    private enum InputType
+    {
+        Password,
+        ConfirmPassword,
+        Email
+    }
 }

@@ -1,25 +1,32 @@
 using System;
 using System.Collections;
 using System.Collections.Generic;
+using System.Text.RegularExpressions;
 using Firebase.Auth;
 using Firebase.Database;
 using UnityEngine;
+using UnityEngine.Events;
 using UnityEngine.Serialization;
 
 public class DatabaseManager : MonoBehaviour
-{
+{ 
+    [SerializeField] SavedMoviesPanel savedMoviesPanel;
+   FirebaseAuth auth;
+   DatabaseReference databaseReference;
+   FirebaseUser user;
+
     public static DatabaseManager Instance { get; private set; }
-    [FormerlySerializedAs("savedMoviesManager")] [SerializeField] SavedMoviesPanel savedMoviesPanel;
-    FirebaseAuth auth;
-    FirebaseUser user;
-    DatabaseReference databaseReference;
     
-    void Awake()
+
+    private void Awake()
     {
+        if (savedMoviesPanel == null)
+        {
+            savedMoviesPanel = FindObjectOfType<SavedMoviesPanel>();
+        }
         if (Instance == null)
         {
             Instance = this;
-            DontDestroyOnLoad(gameObject);
             InitializeFirebaseDatabase();
         }
         else
@@ -27,27 +34,35 @@ public class DatabaseManager : MonoBehaviour
             Destroy(gameObject);
         }
     }
-    
-    void Start()
+
+    private void OnEnable()
+    {
+        if (savedMoviesPanel == null)
+        {
+            savedMoviesPanel = FindObjectOfType<SavedMoviesPanel>();
+        }
+    }
+
+    private void Start()
     {
         StartCoroutine(LoadUserData());
     }
-    
-    void InitializeFirebaseDatabase()
+
+    private void InitializeFirebaseDatabase()
     {
         auth = FirebaseAuth.DefaultInstance;
         user = auth.CurrentUser;
         databaseReference = FirebaseDatabase.DefaultInstance.RootReference;
     }
-    
-    IEnumerator LoadUserData()
+
+    private IEnumerator LoadUserData()
     {
         var dbCheckDataExists = databaseReference.Child("users").Child(user.UserId).Child("movies").GetValueAsync();
-        yield return new WaitUntil(predicate: () => dbCheckDataExists.IsCompleted);
+        yield return new WaitUntil(() => dbCheckDataExists.IsCompleted);
 
         if (dbCheckDataExists.Exception != null)
         {
-            Debug.LogWarning(message:$"Failed to register task with exception: {dbCheckDataExists.Exception}");
+            Debug.LogWarning($"Failed to register task with exception: {dbCheckDataExists.Exception}");
         }
         else if (dbCheckDataExists.Result.Value == null)
         {
@@ -58,141 +73,132 @@ public class DatabaseManager : MonoBehaviour
         {
             Debug.Log("Loading movies...");
             var tempList = new List<Movie>();
-            DataSnapshot snapshot = dbCheckDataExists.Result;
-            foreach (DataSnapshot childSnapshot in snapshot.Children)
+            var snapshot = dbCheckDataExists.Result;
+            foreach (var childSnapshot in snapshot.Children)
             {
                 var tempSnapshot = childSnapshot.Value as IDictionary;
-                if(tempSnapshot!=null)
-                {
+                Debug.Log($"TITLE: {tempSnapshot["title"].ToString()}");
+                if (tempSnapshot != null)
                     tempList.Add(new Movie(
                         tempSnapshot["title"].ToString(),
                         tempSnapshot["imageUrl"].ToString(),
                         tempSnapshot["backdropUrl"].ToString(),
                         tempSnapshot["releaseDate"].ToString(),
                         (bool)tempSnapshot["seen"],
-                        Double.Parse(tempSnapshot["voteAverage"].ToString()),
-                        int.Parse( tempSnapshot["votesCount"].ToString()),
+                        double.Parse(tempSnapshot["voteAverage"].ToString()),
+                        int.Parse(tempSnapshot["votesCount"].ToString()),
                         tempSnapshot["description"].ToString()
-                        ));
-                   
-                }
+                    ));
                 else
-                {
                     Debug.Log($"Null TempSnapshot: {tempSnapshot}");
-                }
             }
             savedMoviesPanel.SetMovies(tempList);
         }
     }
-    
-    IEnumerator SaveOneMovie(Movie movie)
+
+    private IEnumerator SaveOneMovie(Movie movie)
     {
         yield return SaveUserData(movie);
     }
-    
-    IEnumerator SaveAndReloadDatabase(Movie movie)
+
+    private IEnumerator SaveAndReloadDatabase(Movie movie)
     {
         yield return SaveUserData(movie);
         yield return LoadUserData();
     }
-    
-    IEnumerator SaveUserData(Movie movie)
+
+    private IEnumerator SaveUserData(Movie movie)
     {
-        yield return SetTitle(movie.Title);
-        yield return SetImageUrl(movie.Title,movie.ImageUrl);
-        yield return SetBackdropUrl(movie.Title,movie.BackdropUrl);
-        yield return SetReleaseDate(movie.Title,movie.ReleaseDate);
-        yield return SetSeen(movie.Title, movie.Seen);
-        yield return SetDescription(movie.Title, movie.Description);
-        yield return SetAuthor(movie.Title, movie.Author);
-        yield return SetNote(movie.Title, movie.Note);
-        yield return SetVoteAverage(movie.Title, movie.VoteAverage);
-        yield return SetVoteCount(movie.Title, movie.VotesCount);
-        Debug.Log("Saved data");
+        var title = Regex.Replace(movie.Title, @"[^\w\.@-\\% ]","");
+        yield return SetTitle(title);
+        yield return SetImageUrl(title, movie.ImageUrl);
+        yield return SetBackdropUrl(title, movie.BackdropUrl);
+        yield return SetReleaseDate(title, movie.ReleaseDate);
+        yield return SetSeen(title, movie.Seen);
+        yield return SetDescription(title, movie.Description);
+        yield return SetAuthor(title, movie.Author);
+        yield return SetNote(title, movie.Note);
+        yield return SetVoteAverage(title, movie.VoteAverage);
+        yield return SetVoteCount(title, movie.VotesCount);
     }
-    
-    IEnumerator SetTitle(string title)
+
+    private IEnumerator SetTitle(string title)
     {
         var DBTask = databaseReference.Child("users").Child(user.UserId).Child("movies").Child(title).Child("title").SetValueAsync(title);
-        return new WaitUntil(predicate: () => DBTask.IsCompleted);
+        return new WaitUntil(() => DBTask.IsCompleted);
     }
-    
-    IEnumerator SetImageUrl(string title, string imageUrl)
+
+    private IEnumerator SetImageUrl(string title, string imageUrl)
     {
         var DBTask = databaseReference.Child("users").Child(user.UserId).Child("movies").Child(title).Child("imageUrl").SetValueAsync(imageUrl);
-        return new WaitUntil(predicate: () => DBTask.IsCompleted);
+        return new WaitUntil(() => DBTask.IsCompleted);
     }
-    
-    IEnumerator SetBackdropUrl(string title, string imageUrl)
+
+    private IEnumerator SetBackdropUrl(string title, string imageUrl)
     {
         var DBTask = databaseReference.Child("users").Child(user.UserId).Child("movies").Child(title).Child("backdropUrl").SetValueAsync(imageUrl);
-        return new WaitUntil(predicate: () => DBTask.IsCompleted);
+        return new WaitUntil(() => DBTask.IsCompleted);
     }
-    
-    IEnumerator SetReleaseDate(string title,string releaseDate)
+
+    private IEnumerator SetReleaseDate(string title, string releaseDate)
     {
         var DBTask = databaseReference.Child("users").Child(user.UserId).Child("movies").Child(title).Child("releaseDate").SetValueAsync(releaseDate);
-        return new WaitUntil(predicate: () => DBTask.IsCompleted);
+        return new WaitUntil(() => DBTask.IsCompleted);
     }
-    
-    IEnumerator SetSeen(string title, bool seen)
+
+    private IEnumerator SetSeen(string title, bool seen)
     {
         var DBTask = databaseReference.Child("users").Child(user.UserId).Child("movies").Child(title).Child("seen").SetValueAsync(seen);
-        return new WaitUntil(predicate: () => DBTask.IsCompleted);
+        return new WaitUntil(() => DBTask.IsCompleted);
     }
-    
-    IEnumerator SetDescription(string title, string description)
+
+    private IEnumerator SetDescription(string title, string description)
     {
         var DBTask = databaseReference.Child("users").Child(user.UserId).Child("movies").Child(title).Child("description").SetValueAsync(description);
-        return new WaitUntil(predicate: () => DBTask.IsCompleted);
+        return new WaitUntil(() => DBTask.IsCompleted);
     }
-    IEnumerator SetAuthor(string title, string author)
+    private IEnumerator SetAuthor(string title, string author)
     {
         var DBTask = databaseReference.Child("users").Child(user.UserId).Child("movies").Child(title).Child("author").SetValueAsync(author);
-        return new WaitUntil(predicate: () => DBTask.IsCompleted);
+        return new WaitUntil(() => DBTask.IsCompleted);
     }
-    IEnumerator SetVoteAverage(string title, double votesAverage)
+    private IEnumerator SetVoteAverage(string title, double votesAverage)
     {
         var DBTask = databaseReference.Child("users").Child(user.UserId).Child("movies").Child(title).Child("voteAverage").SetValueAsync(votesAverage);
-        return new WaitUntil(predicate: () => DBTask.IsCompleted);
+        return new WaitUntil(() => DBTask.IsCompleted);
     }
-    IEnumerator SetVoteCount(string title, int votesCount)
+    private IEnumerator SetVoteCount(string title, int votesCount)
     {
         var DBTask = databaseReference.Child("users").Child(user.UserId).Child("movies").Child(title).Child("votesCount").SetValueAsync(votesCount);
-        return new WaitUntil(predicate: () => DBTask.IsCompleted);
+        return new WaitUntil(() => DBTask.IsCompleted);
     }
-    IEnumerator SetNote(string title, string note)
+    private IEnumerator SetNote(string title, string note)
     {
         var DBTask = databaseReference.Child("users").Child(user.UserId).Child("movies").Child(title).Child("note").SetValueAsync(note);
-        return new WaitUntil(predicate: () => DBTask.IsCompleted);
+        return new WaitUntil(() => DBTask.IsCompleted);
     }
-    
-    IEnumerator DeleteRecord(Movie movie, SavedMovieItem savedMovieItem)
+
+    private IEnumerator DeleteRecord(Movie movie, SavedMovieItem savedMovieItem)
     {
         var DBTask = databaseReference.Child("users").Child(user.UserId).Child("movies").Child(movie.Title).RemoveValueAsync();
         yield return new WaitUntil(() => DBTask.IsCompleted);
-        
+
         if (DBTask.Exception != null)
-        {
-            Debug.LogWarning(message:$"Failed to register task with exception: {DBTask.Exception}");
-        }
+            Debug.LogWarning($"Failed to register task with exception: {DBTask.Exception}");
         else
-        {
-            Debug.Log("Item deleted!");
             Destroy(savedMovieItem.gameObject);
-        }
     }
-    
+
     public void SaveMovie(Movie movie)
     {
         StartCoroutine(SaveAndReloadDatabase(movie));
     }
-    
+
     public void UpdateOneMovie(Movie movie)
     {
         StartCoroutine(SaveOneMovie(movie));
     }
-    
+
     public void DeleteOneMovie(Movie movie, SavedMovieItem savedMovieItem)
     {
         StartCoroutine(DeleteRecord(movie, savedMovieItem));
